@@ -1,8 +1,7 @@
-cc = gcc
-flags = -std=c11 -O2
+flags = -g -std=c11 -pthread -O2
 
 lab1: lab1.o
-	cc lab1.o -o lab1
+	cc $(flags) lab1.o -o lab1
 
 .PHONY: clean
 clean:
