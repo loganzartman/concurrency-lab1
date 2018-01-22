@@ -1,4 +1,4 @@
-flags = -g -std=c11 -pthread -O2
+flags = -std=c11 -pthread -O3
 
 lab1: lab1.o
 	cc $(flags) lab1.o -o lab1

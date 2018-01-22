@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include <assert.h>
 
-static volatile int shared_counter = 0;
+static int shared_counter = 0;
 static int maxcounter = 100;
 static int workers = 1;
 
