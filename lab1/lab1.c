@@ -59,7 +59,7 @@ void parse_opts(int argc, char* const argv[]) {
 
 	int longindex = 0;
 	char flag = 0;
-	while ((flag = getopt_long(argc, argv, "", longopts, &longindex)) != -1) {
+	while ((flag = getopt_long(argc, argv, "m:w:", longopts, &longindex)) != -1) {
 		switch (flag) {
 			case 'm':
 				maxcounter = atoi(optarg);
