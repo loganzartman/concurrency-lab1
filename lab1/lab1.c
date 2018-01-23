@@ -13,7 +13,7 @@ void parse_opts(int argc, char* const argv[]);
 
 int main(int argc, char* const argv[]) {
 	parse_opts(argc, argv);
-	printf("Max counter: %d\nWorkers: %d\n", maxcounter, workers);
+	// printf("Max counter: %d\nWorkers: %d\n", maxcounter, workers);
 
 	shared_counter = 0;
 	int thread_args[workers];
@@ -26,15 +26,17 @@ int main(int argc, char* const argv[]) {
 		assert(!result);
 	}
 
+	printf("Thread\tCount\n");
+
 	//wait for all threads to complete
 	for (int i=0; i<workers; ++i) {
 		int retval;
 		int result = pthread_join(threads[i], (void*)&retval);
 		assert(!result);
-		printf("Thread %d:\t%d\n", i, retval);
+		printf("%d\t%d\n", i, retval);
 	}
 
-	printf("Finished counting.\n");
+	// printf("Finished counting.\n");
 
 	return 0;
 }
