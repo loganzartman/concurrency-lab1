@@ -19,7 +19,7 @@ def main():
 		else:
 			raise
 	except:
-		print("Usage: tests.py maxworkers [maxcounter]")
+		print("Usage: tests.py [maxworkers] [maxcounter]")
 		return
 
 	print("count: {}".format(maxcounter))
