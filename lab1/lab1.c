@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <getopt.h>
 #include <assert.h>
+#define DATA_SEPARATOR ","
 
-static int shared_counter = 0;
-static int maxcounter = 100;
-static int workers = 1;
-static bool show_counts = false;
-static bool show_lost = false;
-static bool show_load = false;
+static uint64_t shared_counter = 0;
+static uint64_t maxcounter = 100;
+static uint64_t workers = 1;
+static bool show_info = false, show_headers = false;
 
 void *worker_func(void *args);
 void parse_opts(int argc, char* const argv[]);
@@ -21,7 +21,7 @@ int main(int argc, char* const argv[]) {
 	shared_counter = 0;
 	int thread_args[workers];
 	pthread_t threads[workers];
-	int thread_counts[workers];
+	uint64_t thread_counts[workers];
 
 	//spawn worker threads
 	for (int i=0; i<workers; ++i) {
@@ -30,29 +30,31 @@ int main(int argc, char* const argv[]) {
 		assert(!result);
 	}
 
-	if (show_counts)
-		printf("Thread\tCount\n");
-
 	//wait for all threads to complete
 	long counts_total = 0;
 	for (int i=0; i<workers; ++i) {
 		int result = pthread_join(threads[i], (void*)&thread_counts[i]);
 		assert(!result);
-		
-		counts_total += thread_counts[i];
-		if (show_counts)
-			printf("%d\t%d\n", i, thread_counts[i]);
+		counts_total += thread_counts[i]; //sum total number of updates
 	}
 
-	if (show_lost) {
-		printf("lost/maxcounter: %f\n", (double)counts_total / maxcounter);
-	}
-	if (show_load) {
-		printf("thread\tload\n");
-		for (int i=0; i<workers; i++)
-			printf("%d\t%f\n", i, (double)thread_counts[i] / ((double)maxcounter / workers));
-	}
+	//display statistics
+	if (show_headers)
+		printf("update ratio" DATA_SEPARATOR "average imbalance\n");
 
+	if (show_info) {
+		//print information about lost updates
+		printf("%f" DATA_SEPARATOR, (double)counts_total / maxcounter);
+	
+		//print information about load imbalance
+		uint64_t imbalance_total = 0;
+
+		for (int i=0; i<workers; i++) {
+			const uint64_t expected_count = maxcounter / workers;
+			imbalance_total += abs(thread_counts[i] - expected_count);
+		}
+		printf("%ld\n", imbalance_total / workers);
+	}
 	return 0;
 }
 
@@ -72,34 +74,30 @@ void parse_opts(int argc, char* const argv[]) {
 	static struct option longopts[] = {
 		{"maxcounter", required_argument, NULL, 'm'},
 		{"workers", required_argument, NULL, 'w'},
-		{"show-counts", no_argument, NULL, 'c'},
-		{"show-lost", no_argument, NULL, 'l'},
-		{"show-load", no_argument, NULL, 'L'},
+		{"show-info", no_argument, NULL, 'i'},
+		{"show-headers", no_argument, NULL, 'H'},
 		{"help", no_argument, NULL, 'h'}
 	};
 
 	int longindex = 0;
 	char flag = 0;
-	while ((flag = getopt_long(argc, argv, "m:w:", longopts, &longindex)) != -1) {
+	while ((flag = getopt_long(argc, argv, "m:w:iH", longopts, &longindex)) != -1) {
 		switch (flag) {
 			case 'm':
-				maxcounter = atoi(optarg);
+				maxcounter = atoll(optarg);
 				break;
 			case 'w':
-				workers = atoi(optarg);
+				workers = atoll(optarg);
 				break;
-			case 'c':
-				show_counts = true;
+			case 'i':
+				show_info = true;
 				break;
-			case 'l':
-				show_lost = true;
-				break;
-			case 'L':
-				show_load = true;
+			case 'H':
+				show_headers = true;
 				break;
 			case 'h':
 			default:
-				printf("Usage: lab1 [--workers=n] [--maxcounter=n] [--show-counts] [--show-load] [--show-lost]\n");
+				printf("Usage: lab1 [--workers=n] [--maxcounter=n] [--show-info] [--show-headers]\n");
 				exit(-1);
 		}
 	}
