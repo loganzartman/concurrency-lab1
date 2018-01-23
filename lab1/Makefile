@@ -5,7 +5,7 @@ lab1: lab1.o
 
 .PHONY: tests
 test: lab1
-	python tests.py 16
+	python tests.py
 
 .PHONY: clean
 clean:

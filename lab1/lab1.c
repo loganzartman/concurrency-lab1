@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <pthread.h>
 #include <getopt.h>
 #include <assert.h>
@@ -7,13 +8,13 @@
 static int shared_counter = 0;
 static int maxcounter = 100;
 static int workers = 1;
+static bool show_counts = false;
 
 void *worker_func(void *args);
 void parse_opts(int argc, char* const argv[]);
 
 int main(int argc, char* const argv[]) {
 	parse_opts(argc, argv);
-	// printf("Max counter: %d\nWorkers: %d\n", maxcounter, workers);
 
 	shared_counter = 0;
 	int thread_args[workers];
@@ -26,17 +27,18 @@ int main(int argc, char* const argv[]) {
 		assert(!result);
 	}
 
-	printf("Thread\tCount\n");
+	if (show_counts)
+		printf("Thread\tCount\n");
 
 	//wait for all threads to complete
 	for (int i=0; i<workers; ++i) {
 		int retval;
 		int result = pthread_join(threads[i], (void*)&retval);
 		assert(!result);
-		printf("%d\t%d\n", i, retval);
+		
+		if (show_counts)
+			printf("%d\t%d\n", i, retval);
 	}
-
-	// printf("Finished counting.\n");
 
 	return 0;
 }
@@ -56,7 +58,8 @@ void *worker_func(void *args) {
 void parse_opts(int argc, char* const argv[]) {
 	static struct option longopts[] = {
 		{"maxcounter", required_argument, NULL, 'm'},
-		{"workers", required_argument, NULL, 'w'}
+		{"workers", required_argument, NULL, 'w'},
+		{"show-counts", no_argument, NULL, 'c'}
 	};
 
 	int longindex = 0;
@@ -69,8 +72,11 @@ void parse_opts(int argc, char* const argv[]) {
 			case 'w':
 				workers = atoi(optarg);
 				break;
+			case 'c':
+				show_counts = true;
+				break;
 			default:
-				printf("Usage: lab1 [--workers=n] [--maxcounter=n]\n");
+				printf("Usage: lab1 [--workers=n] [--maxcounter=n] [--show_counts]\n");
 				exit(-1);
 		}
 	}
