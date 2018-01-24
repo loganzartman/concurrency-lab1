@@ -32,7 +32,7 @@ def test_time(maxcounter, maxworkers, iterations):
 	while i <= maxworkers:
 		t = run_test_time(maxcounter = maxcounter, workers = i, iterations = iterations)
 		print("{},{}".format(i, t))
-		i *= 2
+		i += 1
 
 def test_stats(maxcounter, maxworkers, iterations):
 	print("count: {}".format(maxcounter))
@@ -42,15 +42,15 @@ def test_stats(maxcounter, maxworkers, iterations):
 	while i <= maxworkers:
 		(ratio, imbalance) = run_test_stats(maxcounter = maxcounter, workers = i, iterations = iterations)
 		print("{},{},{}".format(i, ratio, imbalance))
-		i *= 2
+		i += 1
 
 def run_test_stats(maxcounter, workers, iterations):
 	avgRatio = 0
-	avgImbalance = 0	
+	avgImbalance = 0
 
 	for i in range(0, iterations):
 		out = subprocess.check_output("./lab1 -i -m {} -w {}".format(maxcounter, workers), shell=True)
-		items = out.split(",")
+		items = out.split(b",")
 		avgRatio += float(items[0]) / iterations
 		avgImbalance += float(items[1]) / iterations
 	return (avgRatio, avgImbalance)
