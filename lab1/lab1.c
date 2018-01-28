@@ -51,7 +51,7 @@ int main(int argc, char* const argv[]) {
 
 		for (int i=0; i<workers; i++) {
 			const uint64_t expected_count = maxcounter / workers;
-			imbalance_total += abs(thread_counts[i] - expected_count);
+			imbalance_total += labs(thread_counts[i] - expected_count);
 		}
 		printf("%ld\n", imbalance_total / workers);
 	}
