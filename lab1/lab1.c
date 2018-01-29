@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <pthread.h>
 #include <getopt.h>
 #include <assert.h>
 #define DATA_SEPARATOR ","
 
-static uint64_t shared_counter = 0;
+static atomic_uint_fast64_t shared_counter = 0;
 static uint64_t maxcounter = 100;
 static uint64_t workers = 1;
 static bool show_info = false, show_headers = false;
@@ -63,8 +64,10 @@ void *worker_func(void *args) {
 
 	int my_counter = 0;
 	while (shared_counter < maxcounter) {
-		++my_counter;
-		++shared_counter;
+		uint_fast64_t expected = shared_counter;
+		uint_fast64_t desired = expected + 1;
+		if (atomic_compare_exchange_strong(&shared_counter, &expected, desired))
+			++my_counter;
 	}
 
 	pthread_exit((void*)my_counter);
