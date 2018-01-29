@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -6,7 +8,10 @@
 #include <pthread.h>
 #include <getopt.h>
 #include <assert.h>
+#include <sys/sysinfo.h>
 #define DATA_SEPARATOR ","
+#define PIN_THREADS
+#define PIN_EVENLY
 
 static uint64_t shared_counter = 0;
 static uint64_t maxcounter = 100;
@@ -29,10 +34,28 @@ int main(int argc, char* const argv[]) {
 	uint64_t thread_counts[workers];
 
 	//spawn worker threads
+	const int cpus = get_nprocs();
 	for (int i=0; i<workers; ++i) {
 		thread_args[i] = i;
 		int result = pthread_create(&threads[i], NULL, worker_func, &thread_args[i]);
 		assert(!result);
+
+		#ifdef PIN_THREADS
+
+		//choose CPU core
+		#ifdef PIN_EVENLY
+		const int core = i % cpus;
+		#else
+		const int core = 0;
+		#endif
+
+		//set affinity
+		cpu_set_t cpuset;
+		CPU_ZERO(&cpuset);
+		CPU_SET(core, &cpuset);
+		pthread_setaffinity_np(threads[i], sizeof(cpu_set_t), &cpuset);
+
+		#endif
 	}
 
 	//wait for all threads to complete
