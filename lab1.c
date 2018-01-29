@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <pthread.h>
 #include <getopt.h>
 #include <assert.h>
@@ -12,11 +13,15 @@ static uint64_t maxcounter = 100;
 static uint64_t workers = 1;
 static bool show_info = false, show_headers = false;
 
+static pthread_spinlock_t spinlock;
+
 void *worker_func(void *args);
 void parse_opts(int argc, char* const argv[]);
 
 int main(int argc, char* const argv[]) {
 	parse_opts(argc, argv);
+
+	pthread_spin_init(&spinlock, PTHREAD_PROCESS_PRIVATE);
 
 	shared_counter = 0;
 	int thread_args[workers];
@@ -62,9 +67,15 @@ void *worker_func(void *args) {
 	int id = *((int*)args);
 
 	int my_counter = 0;
-	while (shared_counter < maxcounter) {
+	while (true) {
+		pthread_spin_lock(&spinlock);
+		if (shared_counter >= maxcounter) {
+			pthread_spin_unlock(&spinlock);
+			break;
+		}
 		++my_counter;
 		++shared_counter;
+		pthread_spin_unlock(&spinlock);
 	}
 
 	pthread_exit((void*)my_counter);
