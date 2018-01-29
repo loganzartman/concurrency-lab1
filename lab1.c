@@ -86,8 +86,8 @@ void *worker_func(void *args) {
 	int id = *((int*)args);
 
 	int my_counter = 0;
-	while (shared_counter < maxcounter) {
-		uint_fast64_t expected = shared_counter;
+	uint_fast64_t expected;
+	while ((expected = shared_counter) < maxcounter) {
 		uint_fast64_t desired = expected + 1;
 		if (atomic_compare_exchange_strong(&shared_counter, &expected, desired))
 			++my_counter;
