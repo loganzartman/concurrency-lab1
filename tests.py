@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 def main():
-	iterations = 12
+	iterations = 2
 	maxworkers = 16
 	maxcounter = 10000000
 	
