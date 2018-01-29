@@ -4,7 +4,7 @@ lab1: lab1.o
 	cc $(flags) lab1.o -o lab1
 
 .PHONY: tests
-test: lab1
+tests: lab1
 	python tests.py
 
 .PHONY: clean
