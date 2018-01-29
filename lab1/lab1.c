@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <pthread.h>
 #include <getopt.h>
 #include <assert.h>
@@ -11,6 +12,8 @@ static uint64_t shared_counter = 0;
 static uint64_t maxcounter = 100;
 static uint64_t workers = 1;
 static bool show_info = false, show_headers = false;
+
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *worker_func(void *args);
 void parse_opts(int argc, char* const argv[]);
@@ -62,9 +65,15 @@ void *worker_func(void *args) {
 	int id = *((int*)args);
 
 	int my_counter = 0;
-	while (shared_counter < maxcounter) {
+	while (true) {
+		pthread_mutex_lock(&mutex);
+		if (shared_counter >= maxcounter) {
+			pthread_mutex_unlock(&mutex);
+			break;
+		}
 		++my_counter;
 		++shared_counter;
+		pthread_mutex_unlock(&mutex);
 	}
 
 	pthread_exit((void*)my_counter);
